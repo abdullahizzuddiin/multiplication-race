@@ -16,6 +16,12 @@ const Storage = (() => {
     totalPoints: 0,
     bestScore: 0,
     facts: {},
+    kebunLevel: 1,
+    kebun: {
+      unlockedModes: ["A"],
+      decorations: [],
+      sessionsByMode: { A: 0, B: 0, C: 0 },
+    },
   });
 
   const defaultStreak = () => ({
@@ -28,6 +34,7 @@ const Storage = (() => {
 
   const defaultSettings = () => ({
     theme: "space",
+    gardenTheme: "bunga",
   });
 
   function read(key, fallbackFn) {
@@ -72,7 +79,22 @@ const Storage = (() => {
   }
 
   function getProgress() {
-    return read(KEYS.progress, defaultProgress);
+    const progress = read(KEYS.progress, defaultProgress);
+    // Older Balap Kali saves do not have Kebun fields. Normalise them here so
+    // the original Balap `level` value remains untouched.
+    progress.kebunLevel = Math.min(Math.max(Number(progress.kebunLevel) || 1, 1), 5);
+    progress.kebun = {
+      ...defaultProgress().kebun,
+      ...(progress.kebun || {}),
+      sessionsByMode: {
+        ...defaultProgress().kebun.sessionsByMode,
+        ...((progress.kebun && progress.kebun.sessionsByMode) || {}),
+      },
+    };
+    if (!Array.isArray(progress.kebun.unlockedModes) || !progress.kebun.unlockedModes.length) {
+      progress.kebun.unlockedModes = ["A"];
+    }
+    return progress;
   }
 
   function saveProgress(p) {
@@ -146,6 +168,28 @@ const Storage = (() => {
     saveProgress(p);
   }
 
+  function saveKebunSession(result) {
+    const p = getProgress();
+    const kebun = p.kebun;
+    const mode = result.mode;
+    kebun.sessionsByMode[mode] = (kebun.sessionsByMode[mode] || 0) + 1;
+
+    if (mode === "A" && !kebun.unlockedModes.includes("B")) {
+      kebun.unlockedModes.push("B");
+    }
+    if (mode === "B" && result.accuracy >= 0.8 && !kebun.unlockedModes.includes("C")) {
+      kebun.unlockedModes.push("C");
+    }
+    if (result.accuracy >= 0.8 && p.kebunLevel < 5) {
+      p.kebunLevel += 1;
+      const decoration = `level-${p.kebunLevel}`;
+      if (!kebun.decorations.includes(decoration)) kebun.decorations.push(decoration);
+    }
+    p.totalPoints += result.points;
+    saveProgress(p);
+    return p;
+  }
+
   return {
     getProgress,
     saveProgress,
@@ -154,6 +198,7 @@ const Storage = (() => {
     getStreak,
     recordPlayDay,
     recordFact,
+    saveKebunSession,
     todayStr,
   };
 })();

@@ -262,6 +262,13 @@ body {
   box-shadow: 0 1px 0 var(--primary-press);
   transform: translateY(3px) scale(0.98);
 }
+.btn-garden {
+  background: #87BE78;
+  color: #fff;
+  box-shadow: 0 4px 0 #629B55;
+}
+.btn-garden:active { box-shadow: 0 1px 0 #629B55; transform: translateY(3px) scale(0.98); }
+.try-again { animation: nudge .35s ease; }
 .btn-ghost {
   background: var(--surface);
   color: var(--ink);
@@ -451,3 +458,54 @@ body.theme-space { --bg: #E8F0F8; --track: #D0E0F0; --primary: #7EB8DA; }
 body.theme-car { --bg: #F8F0E8; --track: #E8DCC8; --primary: #E8A87C; }
 body.theme-ocean { --bg: #E4F2F0; --track: #C8E4E0; --primary: #6BB8B0; }
 body.theme-forest { --bg: #EEF4E8; --track: #D4E4C8; --primary: #8AB87A; }
+
+/* Kebun Kali */
+#screen-kebun-menu, #screen-kebun-play, #screen-kebun-results { background: #F1F7EA; }
+.garden-title-small { font-size: 1.05rem; font-weight: 700; flex: 1; text-align: center; }
+.garden-level { color: #52754A; font-weight: 600; min-width: 62px; text-align: right; }
+.garden-menu-hero { text-align: center; padding: 22px 0 18px; }
+.garden-mascot { font-size: 4.2rem; line-height: 1; margin-bottom: 8px; }
+.mode-list { display: flex; flex-direction: column; gap: 12px; }
+.mode-card {
+  min-height: 92px; border: 2px solid #BED9B3; border-radius: var(--radius); background: var(--surface);
+  color: var(--ink); font-family: var(--font); padding: 14px 16px; display: flex; align-items: center;
+  gap: 14px; text-align: left; cursor: pointer; box-shadow: 0 4px 0 #B3CEA9;
+}
+.mode-card:active:not(:disabled) { transform: translateY(3px); box-shadow: 0 1px 0 #B3CEA9; }
+.mode-card span:last-child { display: flex; flex-direction: column; gap: 2px; }
+.mode-card strong { font-size: 1.2rem; }
+.mode-card small { color: var(--ink-soft); font-size: .92rem; }
+.mode-icon { font-size: 2.35rem; }
+.mode-card.locked { opacity: .55; cursor: not-allowed; box-shadow: none; }
+.garden-unlock-note { text-align: center; color: #627B5A; margin-top: auto; padding-top: 18px; }
+.garden-play-stat { display: flex; flex-direction: column; gap: 2px; text-align: center; font-size: .88rem; color: #52754A; }
+.garden-play-stat strong { color: #47753C; font-size: 1.05rem; }
+.kebun-timer-wrap { height: 12px; background: #D8E7D0; border-radius: 999px; overflow: hidden; }
+.kebun-timer-wrap .timer-bar[hidden] { display: none; }
+.garden-card { background: var(--surface); border: 2px solid #C9DFC0; border-radius: var(--radius); padding: 20px; text-align: center; min-height: 260px; }
+.garden-story { color: #627B5A; font-size: 1.06rem; min-height: 28px; }
+.garden-question { font-size: clamp(1.65rem, 8vw, 2.25rem); font-weight: 700; margin: 8px 0 16px; }
+.garden-array { display: grid; grid-template-columns: repeat(var(--columns, 5), minmax(0, 1fr)); gap: 5px; max-width: 330px; margin: 0 auto; }
+.garden-flower { font-size: clamp(1.25rem, 7vw, 1.8rem); line-height: 1.25; }
+.garden-array.bloom .garden-flower { animation: pop .35s ease; }
+.garden-pots { display: grid; grid-template-columns: repeat(auto-fit, minmax(80px, 1fr)); gap: 10px; align-items: end; max-width: 350px; margin: 20px auto 0; }
+.garden-pot { min-height: 112px; border: 3px solid #D98B63; background: #F6B788; border-radius: 14px 14px 24px 24px; padding: 8px; display: flex; flex-direction: column; justify-content: space-between; }
+.pot-seeds { min-height: 50px; font-size: 1.25rem; word-break: break-all; }
+.pot-counter { color: #7A442D; font-size: .82rem; font-weight: 700; margin: 3px 0 6px; }
+.pot-controls { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.pot-add { min-height: 44px; border: 0; border-radius: 12px; background: #8BBC77; color: #fff; font-family: var(--font); font-size: 1.8rem; font-weight: 700; cursor: pointer; }
+.pot-remove { background: #D98879; }
+.pot-add:disabled { opacity: .45; cursor: not-allowed; }
+.pot-add:active { transform: scale(.96); }
+#kebun-count { width: 100%; margin-top: 16px; min-height: 64px; font-size: 1.25rem; }
+#kebun-count:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+.garden-choices { margin-top: 0; }
+.garden-feedback { min-height: 48px; text-align: center; padding: 8px; color: #47753C; font-size: 1.08rem; font-weight: 600; }
+.garden-feedback.soft { color: var(--ink-soft); }
+@media (orientation: landscape) and (max-height: 500px) {
+  .garden-card { min-height: 180px; padding: 12px; }
+  .garden-pots { margin-top: 6px; }
+  .garden-pot { min-height: 75px; }
+  .pot-seeds { min-height: 28px; }
+  .garden-flower { font-size: 1.1rem; }
+}

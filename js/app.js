@@ -14,6 +14,7 @@ const App = (() => {
   ];
 
   const PRAISE = ["Hebat!", "Keren banget!", "Mantap!", "Jago!", "Luar biasa!"];
+  let lastKebunMode = "A";
 
   function el(id) {
     return document.getElementById(id);
@@ -56,7 +57,51 @@ const App = (() => {
     el("home-best").textContent = String(progress.bestScore);
     el("home-points").textContent = String(progress.totalPoints);
     el("streak-count").textContent = String(streak.currentStreak);
-    el("level-hint").textContent = level.hint;
+    el("level-hint").textContent = `Balap: ${level.hint}`;
+  }
+
+  function showKebunMenu() {
+    Kebun.quit();
+    const progress = Storage.getProgress();
+    const level = KebunQuestions.getLevel(progress.kebunLevel);
+    el("kebun-level").textContent = `Level ${level.id}`;
+    el("kebun-level-hint").textContent = `Tabel ${level.tables.join(" dan ")} · Yuk belajar kelompok!`;
+    document.querySelectorAll("[data-kebun-mode]").forEach((button) => {
+      const unlocked = progress.kebun.unlockedModes.includes(button.dataset.kebunMode);
+      button.disabled = !unlocked;
+      button.classList.toggle("locked", !unlocked);
+      const label = button.querySelector("small");
+      const descriptions = {
+        A: "Isi pot, lalu hitung bersama",
+        B: "Lihat bunga dan pilih jawabannya",
+        C: "Jawab cepat tanpa gambar",
+      };
+      label.textContent = unlocked ? descriptions[button.dataset.kebunMode] : "Selesaikan mode sebelumnya untuk membuka";
+    });
+    el("kebun-unlock-note").textContent = progress.kebun.unlockedModes.includes("C")
+      ? "Semua mode sudah terbuka. Kamu hebat!"
+      : "Selesaikan Tanam Kelompok untuk membuka Tebak Kebun.";
+    showScreen("screen-kebun-menu");
+  }
+
+  function startKebun(mode) {
+    lastKebunMode = mode;
+    showScreen("screen-kebun-play");
+    Kebun.start(mode, { onEnd: showKebunResults });
+  }
+
+  function showKebunResults(result) {
+    showScreen("screen-kebun-results");
+    el("kebun-results-title").textContent = result.stars >= 2 ? "Kebunmu tumbuh!" : "Yuk rawat lagi!";
+    el("kebun-results-points").textContent = String(result.points);
+    el("kebun-results-detail").textContent = `${result.correct}/${result.total} benar · Level Kebun ${result.level}`;
+    el("kebun-results-insight").textContent = result.accuracy >= 0.8
+      ? "Hebat! Kamu siap menanam lebih banyak lagi."
+      : "Tidak apa-apa. Coba lagi, pelan-pelan juga bisa!";
+    document.querySelectorAll("#kebun-results-stars .star").forEach((star, index) => {
+      star.classList.toggle("lit", index < result.stars);
+    });
+    refreshHome();
   }
 
   function runCountdown(levelId) {
@@ -129,6 +174,7 @@ const App = (() => {
 
   function quitToHome() {
     Balap.quit();
+    Kebun.quit();
     refreshHome();
     showScreen("screen-home");
   }
@@ -139,6 +185,16 @@ const App = (() => {
     el("btn-quit").addEventListener("click", () => quitToHome());
     el("btn-again").addEventListener("click", () => startGame());
     el("btn-home").addEventListener("click", () => quitToHome());
+    el("btn-kebun").addEventListener("click", () => showKebunMenu());
+    el("btn-kebun-home").addEventListener("click", () => quitToHome());
+    el("btn-kebun-quit").addEventListener("click", () => showKebunMenu());
+    el("btn-kebun-menu").addEventListener("click", () => showKebunMenu());
+    el("btn-kebun-again").addEventListener("click", () => startKebun(lastKebunMode));
+    document.querySelectorAll("[data-kebun-mode]").forEach((button) => {
+      button.addEventListener("click", () => {
+        if (!button.disabled) startKebun(button.dataset.kebunMode);
+      });
+    });
   }
 
   function init() {
