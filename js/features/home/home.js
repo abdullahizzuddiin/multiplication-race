@@ -16,7 +16,7 @@ export function applyTheme(themeId) {
   return theme;
 }
 
-export function renderHome(app, { onStart, onKebun }) {
+export function renderHome(app, { onStart, onKebun, onMathQuest }) {
   const progress = Storage.getProgress();
   const streak = Storage.getStreak();
   const theme = applyTheme(Storage.getSettings().theme);
@@ -27,12 +27,14 @@ export function renderHome(app, { onStart, onKebun }) {
       <header class="home-header"><p class="brand">Jagoan Kali</p><div class="streak-badge" title="Api Semangat"><span class="streak-icon" aria-hidden="true">🔥</span><span class="streak-count">${streak.currentStreak}</span><span class="streak-label">hari</span></div></header>
       <div class="home-hero"><div class="mascot" aria-hidden="true">${theme.vehicle}</div><h1 class="home-title">Rumah Jagoan Kali</h1><p class="home-sub">Pilih permainanmu hari ini!</p></div>
       <div class="home-meta"><div class="meta-pill"><span class="meta-label">Level Balap</span><span class="meta-value">${progress.level}</span></div><div class="meta-pill"><span class="meta-label">Rekor</span><span class="meta-value">${progress.bestScore}</span></div><div class="meta-pill"><span class="meta-label">Poin</span><span class="meta-value">${progress.totalPoints}</span></div></div>
-      <div class="home-actions"><button type="button" class="btn btn-garden btn-lg" id="btn-kebun">🌱 Kebun Kali</button><button type="button" class="btn btn-primary btn-lg" id="btn-start">🏁 Balap Kali</button><button type="button" class="btn btn-ghost" id="btn-theme">Tema Balap: <span id="theme-name">${theme.name}</span></button></div>
+      <div class="home-actions"><button type="button" class="btn btn-garden btn-lg" id="btn-kebun">🌱 Kebun Kali</button><button type="button" class="btn btn-primary btn-lg" id="btn-start">🏁 Balap Kali</button><button type="button" class="btn btn-ghost" id="btn-mathquest">🔢 MathQuest 10×10</button><button type="button" class="btn btn-ghost" id="btn-theme">Tema Balap: <span id="theme-name">${theme.name}</span></button></div>
       <p class="home-hint">Balap: ${level.hint}</p>
     </section>`;
 
   app.querySelector("#btn-start").addEventListener("click", onStart);
   app.querySelector("#btn-kebun").addEventListener("click", onKebun);
+  const mathquestBtn = app.querySelector("#btn-mathquest");
+  if (mathquestBtn && onMathQuest) mathquestBtn.addEventListener("click", onMathQuest);
   app.querySelector("#btn-theme").addEventListener("click", () => {
     const current = Storage.getSettings().theme;
     const index = THEMES.findIndex((item) => item.id === current);
