@@ -198,3 +198,249 @@ function wireSetupEvents(app, state, setState, onStart) {
     onStart({ tables: state.tables, timerSeconds: state.timerSeconds, questions: state.questions });
   });
 }
+
+export function renderGame(app, settings, { onExit, onEnd }) {
+  const quest = createQuest(settings);
+  let timerInterval = null;
+  let active = true;
+
+  function buildGrid() {
+    const currentQ = quest.getQuestion();
+    let html = '<div class="mq-grid" role="grid" aria-label="Multiplication Matrix">';
+    html += '<div class="mq-cell mq-header-cell">×';
+    for (let col = 1; col <= 10; col++) html += `</div><div class="mq-cell mq-header-cell ${currentQ && col === currentQ.multiplier ? "mq-target-col" : ""}">${col}`;
+    for (let row = 1; row <= 10; row++) {
+      html += `</div><div class="mq-cell mq-header-cell ${currentQ && row === currentQ.table ? "mq-target-row" : ""}">${row}`;
+      for (let col = 1; col <= 10; col++) {
+        const key = `${row}x${col}`;
+        const solved = quest.getSolvedKeys().has(key);
+        const isTarget = currentQ && row === currentQ.table && col === currentQ.multiplier;
+        const isCrosshair = currentQ && !isTarget && (row === currentQ.table || col === currentQ.multiplier);
+        const product = row * col;
+        const content = isTarget ? "?" : product;
+        const cls = [
+          "mq-cell",
+          solved ? "solved" : "",
+          isTarget ? "target" : "",
+          isCrosshair ? "crosshair" : "",
+          isTarget || isCrosshair ? "" : "default",
+        ].filter(Boolean).join(" ");
+        html += `</div><div class="${cls}" data-key="${key}">${content}${solved ? " ✓" : ""}`;
+      }
+    }
+    html += "</div>";
+    return html;
+  }
+
+  function updateGameDOM() {
+    const currentQ = quest.getQuestion();
+    const timerEl = app.querySelector("#mq-timer-text");
+    const timerBarEl = app.querySelector("#mq-timer-bar");
+    if (timerEl) timerEl.textContent = formatTime(quest.getTimeRemaining());
+    if (timerBarEl) timerBarEl.style.width = `${(quest.getTimeRemaining() / settings.timerSeconds) * 100}%`;
+    const scoreEl = app.querySelector("#mq-score");
+    if (scoreEl) scoreEl.textContent = String(quest.getScore());
+    const streakEl = app.querySelector("#mq-streak");
+    if (streakEl) streakEl.textContent = `×${quest.getStreak()}`;
+    const accuracyEl = app.querySelector("#mq-accuracy");
+    if (accuracyEl) { const acc = quest.getAccuracy(); accuracyEl.textContent = `${acc.correct}/${acc.total} • ${acc.percentage}%`; }
+    const progressEl = app.querySelector("#mq-progress");
+    if (progressEl) progressEl.textContent = `${quest.getMasteredPercent()}% Mastered`;
+    const gridEl = app.querySelector("#mq-grid-wrap");
+    if (gridEl) gridEl.innerHTML = buildGrid();
+    const problemEl = app.querySelector("#mq-problem");
+    if (problemEl) problemEl.textContent = currentQ ? `${currentQ.table} × ${currentQ.multiplier} = ` : "";
+    const hintEl = app.querySelector("#mq-hint-text");
+    if (hintEl) hintEl.textContent = currentQ ? MATHQUEST_CONFIG.PROF_DIIN_HINTS[currentQ.table] || "" : "";
+  }
+
+  app.innerHTML = `
+    <section id="screen-mathquest-game" class="screen active mq-game" aria-label="MathQuest Game">
+      <header class="mq-game-header">
+        <div class="mq-game-stats">
+          <div class="mq-stat"><span class="mq-stat-label">Timer</span><span class="mq-stat-value" id="mq-timer-text">${formatTime(quest.getTimeRemaining())}</span></div>
+          <div class="mq-stat"><span class="mq-stat-label">Score</span><span class="mq-stat-value" id="mq-score">0</span></div>
+          <div class="mq-stat mq-desktop-only"><span class="mq-stat-label">Accuracy</span><span class="mq-stat-value" id="mq-accuracy">0/0 • 0%</span></div>
+          <div class="mq-stat mq-desktop-only"><span class="mq-stat-label">Streak</span><span class="mq-stat-value" id="mq-streak">×0</span></div>
+        </div>
+        <div class="mq-timer-bar-wrap"><div class="mq-timer-bar" id="mq-timer-bar" style="width:100%"></div></div>
+        <div class="mq-game-actions">
+          <button type="button" class="mq-btn-sm" id="mq-pause">⏸ Pause</button>
+          <button type="button" class="mq-btn-sm mq-mobile-only" id="mq-exit">✕ Exit</button>
+        </div>
+      </header>
+      <div class="mq-grid-wrap" id="mq-grid-wrap">${buildGrid()}</div>
+      <div class="mq-progress-row"><span class="mq-progress-label">Grid Progress</span><span class="mq-progress-value" id="mq-progress">0% Mastered</span></div>
+      <div class="mq-problem-panel">
+        <p class="mq-problem" id="mq-problem"></p>
+        <div class="mq-hint"><div class="mq-hint-avatar" aria-hidden="true">🦉</div><div><p class="mq-hint-label">Prof. Diin's Hint</p><p class="mq-hint-text" id="mq-hint-text"></p></div></div>
+        <div class="mq-problem-actions">
+          <button type="button" class="mq-btn-sm" id="mq-show-array">💡 Show Array</button>
+          <button type="button" class="mq-btn-sm" id="mq-skip">⏭ Skip</button>
+        </div>
+      </div>
+      <div class="mq-answer-row">
+        <input type="number" inputmode="numeric" class="mq-input" id="mq-answer-input" placeholder="Answer" aria-label="Answer" autocomplete="off" />
+        <button type="button" class="mq-btn-submit" id="mq-submit">Submit Answer</button>
+      </div>
+      <div class="mq-keypad mq-desktop-only" id="mq-keypad">
+        <div class="mq-keypad-toggle"><button type="button" class="mq-btn-sm" id="mq-keypad-hide">Hide Keypad</button></div>
+        <div class="mq-keypad-grid">
+          ${[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => `<button type="button" class="mq-key" data-key-value="${n}">${n}</button>`).join("")}
+          <button type="button" class="mq-key" id="mq-key-clr">CLR</button>
+          <button type="button" class="mq-key" id="mq-key-backspace">⌫</button>
+        </div>
+      </div>
+    </section>
+  `;
+
+  function tick() {
+    if (!active || quest.getPhase() === "ended") { clearInterval(timerInterval); return; }
+    quest.tick(1);
+    if (quest.getPhase() === "ended") {
+      clearInterval(timerInterval);
+      active = false;
+      onEnd({
+        ...settings,
+        score: quest.getScore(),
+        accuracy: quest.getAccuracy(),
+        bestStreak: quest.getBestStreak(),
+        completed: quest.getCompleted(),
+        target: quest.getTarget(),
+        endReason: quest.getEndReason(),
+        solvedKeys: quest.getSolvedKeys(),
+        masteredPercent: quest.getMasteredPercent(),
+      });
+      return;
+    }
+    updateGameDOM();
+  }
+
+  timerInterval = setInterval(tick, 1000);
+
+  function submitAnswer() {
+    if (quest.getPhase() !== "playing" || quest.getIsPaused()) return;
+    const input = app.querySelector("#mq-answer-input");
+    if (!input || input.value === "") return;
+    quest.submitAnswer(Number(input.value));
+    input.value = "";
+    updateGameDOM();
+    if (quest.getPhase() === "ended") {
+      clearInterval(timerInterval);
+      active = false;
+      onEnd({
+        ...settings,
+        score: quest.getScore(),
+        accuracy: quest.getAccuracy(),
+        bestStreak: quest.getBestStreak(),
+        completed: quest.getCompleted(),
+        target: quest.getTarget(),
+        endReason: quest.getEndReason(),
+        solvedKeys: quest.getSolvedKeys(),
+        masteredPercent: quest.getMasteredPercent(),
+      });
+    }
+  }
+
+  app.querySelector("#mq-submit").addEventListener("click", submitAnswer);
+  const answerInput = app.querySelector("#mq-answer-input");
+  answerInput.addEventListener("keydown", (e) => { if (e.key === "Enter") { e.preventDefault(); submitAnswer(); } });
+
+  app.querySelector("#mq-skip").addEventListener("click", () => {
+    quest.skip();
+    updateGameDOM();
+    if (quest.getPhase() === "ended") {
+      clearInterval(timerInterval);
+      active = false;
+      onEnd({
+        ...settings,
+        score: quest.getScore(),
+        accuracy: quest.getAccuracy(),
+        bestStreak: quest.getBestStreak(),
+        completed: quest.getCompleted(),
+        target: quest.getTarget(),
+        endReason: quest.getEndReason(),
+        solvedKeys: quest.getSolvedKeys(),
+        masteredPercent: quest.getMasteredPercent(),
+      });
+    }
+  });
+
+  const pauseBtn = app.querySelector("#mq-pause");
+  pauseBtn.addEventListener("click", () => {
+    if (quest.getIsPaused()) {
+      quest.resume();
+      pauseBtn.textContent = "⏸ Pause";
+      app.querySelector("#mq-grid-wrap").classList.remove("mq-paused");
+    } else {
+      quest.pause();
+      pauseBtn.textContent = "▶ Resume";
+      app.querySelector("#mq-grid-wrap").classList.add("mq-paused");
+    }
+  });
+
+  const exitBtn = app.querySelector("#mq-exit");
+  if (exitBtn) exitBtn.addEventListener("click", () => {
+    if (confirm("Exit quest? Your progress will be lost.")) {
+      clearInterval(timerInterval);
+      active = false;
+      onExit();
+    }
+  });
+
+  app.querySelector("#mq-show-array").addEventListener("click", () => {
+    const crosshairs = app.querySelectorAll("#mq-grid-wrap .crosshair");
+    crosshairs.forEach(c => c.classList.add("mq-pulse"));
+    setTimeout(() => crosshairs.forEach(c => c.classList.remove("mq-pulse")), MATHQUEST_CONFIG.SHOW_ARRAY_PULSE_DURATION_MS);
+  });
+
+  const keypadHideBtn = app.querySelector("#mq-keypad-hide");
+  const keypadEl = app.querySelector("#mq-keypad");
+  if (keypadHideBtn && keypadEl) {
+    keypadHideBtn.addEventListener("click", () => {
+      const hidden = keypadEl.style.display === "none";
+      keypadEl.style.display = hidden ? "" : "none";
+      keypadHideBtn.textContent = hidden ? "Hide Keypad" : "Show Keypad";
+    });
+  }
+
+  app.querySelectorAll("[data-key-value]").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const input = app.querySelector("#mq-answer-input");
+      if (input) input.value += btn.dataset.keyValue;
+    });
+  });
+  const clrBtn = app.querySelector("#mq-key-clr");
+  if (clrBtn) clrBtn.addEventListener("click", () => { const input = app.querySelector("#mq-answer-input"); if (input) input.value = ""; });
+  const backspaceBtn = app.querySelector("#mq-key-backspace");
+  if (backspaceBtn) backspaceBtn.addEventListener("click", () => { const input = app.querySelector("#mq-answer-input"); if (input) input.value = input.value.slice(0, -1); });
+
+  return () => {
+    active = false;
+    clearInterval(timerInterval);
+  };
+}
+
+export function renderResults(app, result, { onAgain, onSetup }) {
+  const reasonText = result.endReason === "time-up" ? "Time's up!" : "All questions complete!";
+  app.innerHTML = `
+    <div class="mq-modal-overlay">
+      <div class="mq-modal">
+        <h2 class="mq-modal-title">Quest Complete!</h2>
+        <p class="mq-modal-subtitle">${reasonText}</p>
+        <div class="mq-modal-stats">
+          <div class="mq-modal-stat"><span class="mq-stat-label">Final Score</span><span class="mq-stat-value">${result.score} pts</span></div>
+          <div class="mq-modal-stat"><span class="mq-stat-label">Correct Answers</span><span class="mq-stat-value">${result.accuracy.correct} / ${result.accuracy.total} (${result.accuracy.percentage}%)</span></div>
+          <div class="mq-modal-stat"><span class="mq-stat-label">Best Streak</span><span class="mq-stat-value">×${result.bestStreak}</span></div>
+          <div class="mq-modal-stat"><span class="mq-stat-label">Questions Completed</span><span class="mq-stat-value">${result.completed} / ${result.target}</span></div>
+        </div>
+        <div class="mq-modal-actions">
+          <button type="button" class="mq-btn-start" id="mq-again">Play Again</button>
+          <button type="button" class="mq-btn-ghost" id="mq-setup-btn">Back to Setup</button>
+        </div>
+      </div>
+    </div>
+  `;
+  app.querySelector("#mq-again").addEventListener("click", onAgain);
+  app.querySelector("#mq-setup-btn").addEventListener("click", onSetup);
+}
