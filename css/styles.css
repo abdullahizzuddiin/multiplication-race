@@ -43,7 +43,7 @@ body {
 #app {
   min-height: 100%;
   min-height: 100dvh;
-  max-width: 1080px;
+  max-width: 520px;
   margin: 0 auto;
   position: relative;
 }
@@ -52,7 +52,7 @@ body {
   flex-direction: column;
   min-height: 100%;
   min-height: 100dvh;
-  padding: 24px max(16px, env(safe-area-inset-left)) calc(24px + env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-right));
+  padding: 20px 20px calc(24px + env(safe-area-inset-bottom));
   animation: fadeIn 0.28s ease;
 }
 .screen.active { display: flex; }
@@ -534,26 +534,4 @@ body.theme-forest { --bg: #F4FAF3; --track: #DDF0D9; --primary: #297A3A; }
   .garden-pot { min-height: 75px; }
   .pot-seeds { min-height: 28px; }
   .garden-flower { font-size: 1.1rem; }
-}
-
-@media (min-width: 700px) {
-  .screen { padding: 32px; }
-  #screen-home, #screen-results, #screen-kebun-menu, #screen-kebun-results { max-width: 620px; margin: 0 auto; }
-  #screen-play.active, #screen-kebun-play.active {
-    display: grid;
-    grid-template-columns: minmax(0, 8fr) minmax(280px, 4fr);
-    grid-template-rows: auto auto auto 1fr auto;
-    column-gap: 28px;
-    align-content: start;
-  }
-  #screen-play .play-header, #screen-kebun-play .play-header,
-  #screen-play .race-track, #screen-kebun-play .kebun-timer-wrap { grid-column: 1 / -1; }
-  #screen-play .timer-bar-wrap { grid-column: 1; grid-row: 3; align-self: center; }
-  #screen-play .question-card, #screen-kebun-play .garden-card { grid-column: 1; grid-row: 4; align-self: stretch; }
-  #screen-play .choices, #screen-kebun-play .garden-choices { grid-column: 2; grid-row: 3 / span 2; align-self: center; }
-  #screen-play .feedback, #screen-kebun-play .garden-feedback { grid-column: 1 / -1; }
-  #screen-play .choices { grid-template-columns: 1fr 1fr; }
-  #screen-play .choice { min-height: 88px; font-size: 2.1rem; }
-  #screen-kebun-play .garden-card { min-height: 390px; }
-  .home-title { font-size: 3.5rem; }
 }
