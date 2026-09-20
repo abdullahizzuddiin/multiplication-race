@@ -10,6 +10,10 @@ const modules = [
   "js/features/home/home.js",
   "js/features/balap/views.js",
   "js/features/kebun/views.js",
+  "js/features/mathquest/config.js",
+  "js/features/mathquest/state.js",
+  "js/features/mathquest/engine.js",
+  "js/features/mathquest/views.js",
   "js/main.js",
 ];
 
@@ -28,6 +32,18 @@ function makeClassic(source, path) {
     output = output
       .replace("function renderPlay", "function renderKebunPlay")
       .replace("function renderResults", "function renderKebunResults");
+  }
+  if (path.endsWith("features/mathquest/config.js")) {
+    output = output.replace(/^export const /gm, "const ");
+  }
+  if (path.endsWith("features/mathquest/state.js")) {
+    output = output.replace(/^export const /gm, "const ");
+  }
+  if (path.endsWith("features/mathquest/engine.js")) {
+    output = output.replace(/^export function /gm, "function ");
+  }
+  if (path.endsWith("features/mathquest/views.js")) {
+    output = output.replace(/^export function /gm, "function ");
   }
   return `\n/* ${path} */\n${output}`;
 }
