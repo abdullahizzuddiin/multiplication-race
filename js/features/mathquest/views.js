@@ -228,7 +228,7 @@ export function renderGame(app, settings, { onExit, onEnd }) {
         html += `</div><div class="${cls}" data-key="${key}">${content}${solved ? " ✓" : ""}`;
       }
     }
-    html += "</div>";
+    html += "</div></div>";
     return html;
   }
 

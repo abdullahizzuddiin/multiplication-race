@@ -1280,7 +1280,7 @@ function createQuest(settings) {
 
 /* js/features/mathquest/views.js */
 
-function renderSetup(app, { onStart }) {
+function renderMathQuestSetup(app, { onStart }) {
   let state = {
     tables: new Set([1, 2, 3, 4, 5, 10]),
     timerSeconds: 90,
@@ -1477,7 +1477,7 @@ function wireSetupEvents(app, state, setState, onStart) {
   });
 }
 
-function renderGame(app, settings, { onExit, onEnd }) {
+function renderMathQuestGame(app, settings, { onExit, onEnd }) {
   const quest = createQuest(settings);
   let timerInterval = null;
   let active = true;
@@ -1506,7 +1506,7 @@ function renderGame(app, settings, { onExit, onEnd }) {
         html += `</div><div class="${cls}" data-key="${key}">${content}${solved ? " ✓" : ""}`;
       }
     }
-    html += "</div>";
+    html += "</div></div>";
     return html;
   }
 
@@ -1699,7 +1699,7 @@ function renderGame(app, settings, { onExit, onEnd }) {
   };
 }
 
-function renderResults(app, result, { onAgain, onSetup }) {
+function renderMathQuestResults(app, result, { onAgain, onSetup }) {
   const reasonText = result.endReason === "time-up" ? "Time's up!" : "All questions complete!";
   app.innerHTML = `
     <div class="mq-modal-overlay">
