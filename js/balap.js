@@ -1,3 +1,6 @@
+import Storage from "./storage.js";
+import Questions from "./questions.js";
+
 /**
  * Balap Kali core round loop.
  * Importer: app.js (Balap.start / Balap.quit). Uses Questions + Storage.
@@ -9,6 +12,7 @@ const Balap = (() => {
 
   let state = null;
   let timerRaf = null;
+  let nextTimer = null;
   let onRoundEnd = null;
 
   function el(id) {
@@ -175,7 +179,10 @@ const Balap = (() => {
     });
     Storage.recordFact(q.a, q.b, correct, elapsed);
     updateHud();
-    setTimeout(() => nextQuestion(), correct ? 700 : 1200);
+    nextTimer = setTimeout(() => {
+      nextTimer = null;
+      nextQuestion();
+    }, correct ? 700 : 1200);
   }
 
   function onChoice(value, btn) {
@@ -240,6 +247,8 @@ const Balap = (() => {
 
   function start(levelId, callbacks) {
     stopTimer();
+    if (nextTimer) clearTimeout(nextTimer);
+    nextTimer = null;
     onRoundEnd = callbacks && callbacks.onRoundEnd;
     const progress = Storage.getProgress();
     state = createState(levelId || progress.level, progress.facts);
@@ -251,8 +260,12 @@ const Balap = (() => {
 
   function quit() {
     stopTimer();
+    if (nextTimer) clearTimeout(nextTimer);
+    nextTimer = null;
     state = null;
   }
 
   return { start, quit, getState: () => state };
 })();
+
+export default Balap;

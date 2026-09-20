@@ -202,3 +202,5 @@ const Storage = (() => {
     todayStr,
   };
 })();
+
+export default Storage;

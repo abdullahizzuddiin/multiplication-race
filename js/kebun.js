@@ -1,3 +1,6 @@
+import Storage from "./storage.js";
+import KebunQuestions from "./kebun-questions.js";
+
 /** Kebun Kali session controller. Uses Storage and KebunQuestions. */
 const Kebun = (() => {
   const MODE_NAMES = { A: "Tanam Kelompok", B: "Tebak Kebun", C: "Kebun Kilat" };
@@ -207,3 +210,5 @@ const Kebun = (() => {
   function quit() { clearTimers(); state = null; }
   return { start, quit, MODE_NAMES };
 })();
+
+export default Kebun;

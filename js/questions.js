@@ -203,3 +203,5 @@ const Questions = (() => {
     buildInsight,
   };
 })();
+
+export default Questions;

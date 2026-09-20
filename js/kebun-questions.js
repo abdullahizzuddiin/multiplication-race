@@ -57,3 +57,5 @@ const KebunQuestions = (() => {
 
   return { LEVELS, QUESTIONS_PER_SESSION, getLevel, buildSession, stars };
 })();
+
+export default KebunQuestions;

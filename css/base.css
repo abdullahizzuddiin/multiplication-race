@@ -1,0 +1,2 @@
+/* Compatibility entry point: shared visual foundation remains in styles.css during this behavior-preserving migration. */
+@import url("./styles.css");

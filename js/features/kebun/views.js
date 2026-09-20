@@ -1,0 +1,20 @@
+export function renderMenu(app, progress, level, onHome, onStart) {
+  const descriptions = { A: "Isi pot, lalu hitung bersama", B: "Lihat bunga dan pilih jawabannya", C: "Jawab cepat tanpa gambar" };
+  const card = (mode, icon, title) => {
+    const unlocked = progress.kebun.unlockedModes.includes(mode);
+    return `<button type="button" class="mode-card ${unlocked ? "" : "locked"}" data-kebun-mode="${mode}" ${unlocked ? "" : "disabled"}><span class="mode-icon">${icon}</span><span><strong>${title}</strong><small>${unlocked ? descriptions[mode] : "Selesaikan mode sebelumnya untuk membuka"}</small></span></button>`;
+  };
+  app.innerHTML = `<section id="screen-kebun-menu" class="screen active" aria-label="Pilih mode Kebun Kali"><header class="play-header"><button type="button" class="btn btn-icon" id="btn-kebun-home" aria-label="Kembali ke rumah">←</button><p class="garden-title-small">🌱 Kebun Kali</p><span class="garden-level">Level ${level.id}</span></header><div class="garden-menu-hero"><div class="garden-mascot" aria-hidden="true">🐰</div><h1 class="home-title">Kebun Kali</h1><p class="home-sub">Tabel ${level.tables.join(" dan ")} · Yuk belajar kelompok!</p></div><div class="mode-list">${card("A", "🪴", "Tanam Kelompok")}${card("B", "🌼", "Tebak Kebun")}${card("C", "⚡", "Kebun Kilat")}</div><p class="garden-unlock-note">${progress.kebun.unlockedModes.includes("C") ? "Semua mode sudah terbuka. Kamu hebat!" : "Selesaikan Tanam Kelompok untuk membuka Tebak Kebun."}</p></section>`;
+  app.querySelector("#btn-kebun-home").addEventListener("click", onHome);
+  app.querySelectorAll("[data-kebun-mode]").forEach((button) => button.addEventListener("click", () => onStart(button.dataset.kebunMode)));
+}
+
+export function renderPlay(app) {
+  app.innerHTML = `<section id="screen-kebun-play" class="screen active" aria-label="Kebun Kali"><header class="play-header"><button type="button" class="btn btn-icon" id="btn-kebun-quit" aria-label="Keluar">←</button><div class="garden-play-stat"><span id="kebun-mode-label"></span><strong>🌱 <span id="kebun-points">0</span></strong></div><div class="play-progress-text"><span id="kebun-index">1</span>/<span id="kebun-total">5</span></div></header><div class="kebun-timer-wrap"><div id="kebun-timer" class="timer-bar" hidden></div></div><main class="garden-card"><p class="garden-story" id="kebun-story"></p><p class="garden-question" id="kebun-question"></p><div class="garden-array" id="kebun-array"></div><div class="garden-pots" id="kebun-pots"></div><button type="button" class="btn btn-garden" id="kebun-count" hidden>Hitung!</button></main><div class="choices garden-choices" id="kebun-choices" role="group" aria-label="Pilihan jawaban"></div><p class="garden-feedback" id="kebun-feedback" aria-live="polite"></p></section>`;
+}
+
+export function renderResults(app, result, { onAgain, onMenu }) {
+  app.innerHTML = `<section id="screen-kebun-results" class="screen active" aria-label="Hasil Kebun Kali"><header class="results-header"><p class="brand-sm">🌱 Kebun Kali</p><h1 class="results-title">${result.stars >= 2 ? "Kebunmu tumbuh!" : "Yuk rawat lagi!"}</h1><div class="stars">${[1, 2, 3].map((n) => `<span class="star ${n <= result.stars ? "lit" : ""}">★</span>`).join("")}</div></header><div class="results-score-block"><p class="results-score-label">Benih Ajaib didapat</p><p class="results-score">${result.points}</p><p class="results-detail">${result.correct}/${result.total} benar · Level Kebun ${result.level}</p></div><div class="insight-card"><p class="insight-text">${result.accuracy >= .8 ? "Hebat! Kamu siap menanam lebih banyak lagi." : "Tidak apa-apa. Coba lagi, pelan-pelan juga bisa!"}</p></div><div class="results-actions"><button type="button" class="btn btn-garden btn-lg" id="btn-kebun-again">Main Lagi</button><button type="button" class="btn btn-ghost" id="btn-kebun-menu">Pilih Mode Lain</button></div></section>`;
+  app.querySelector("#btn-kebun-again").addEventListener("click", onAgain);
+  app.querySelector("#btn-kebun-menu").addEventListener("click", onMenu);
+}
