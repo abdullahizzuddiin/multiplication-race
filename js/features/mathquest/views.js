@@ -2,7 +2,7 @@ import { MATHQUEST_CONFIG, formatTime, getPaceLabel, getQuestLengthLabel } from 
 import { TIERS, PRESETS, buildQuestionPool, clampQuestions, findTierByTables, QUESTIONS_PER_TABLE } from "./state.js";
 import { createQuest } from "./engine.js";
 
-export function renderSetup(app, { onStart }) {
+export function renderSetup(app, { onStart, onBack }) {
   let state = {
     tables: new Set([1, 2, 3, 4, 5, 10]),
     timerSeconds: 90,
@@ -12,7 +12,7 @@ export function renderSetup(app, { onStart }) {
 
   function reRender() {
     app.innerHTML = buildSetupHTML(state);
-    wireSetupEvents(app, state, (newState) => { state = newState; reRender(); }, onStart);
+    wireSetupEvents(app, state, (newState) => { state = newState; reRender(); }, onStart, onBack);
   }
 
   reRender();
@@ -27,6 +27,7 @@ function buildSetupHTML(state) {
   return `
     <section id="screen-mathquest-setup" class="screen active mq-setup" aria-label="MathQuest Setup">
       <header class="mq-header">
+        <button type="button" class="mq-btn-back" id="mq-back" aria-label="Back to home">← Back</button>
         <div class="mq-header-icon" aria-hidden="true">🔢</div>
         <div class="mq-header-text">
           <h1 class="mq-title">MathQuest 10×10</h1>
@@ -119,7 +120,7 @@ function buildSetupHTML(state) {
   `;
 }
 
-function wireSetupEvents(app, state, setState, onStart) {
+function wireSetupEvents(app, state, setState, onStart, onBack) {
   const clearPreset = (s) => { s.activePresetId = null; };
   const clamp = (s) => { s.questions = clampQuestions(s.questions, s.tables.size); };
 
@@ -197,6 +198,9 @@ function wireSetupEvents(app, state, setState, onStart) {
   if (startBtn) startBtn.addEventListener("click", () => {
     onStart({ tables: state.tables, timerSeconds: state.timerSeconds, questions: state.questions });
   });
+
+  const backBtn = app.querySelector("#mq-back");
+  if (backBtn && onBack) backBtn.addEventListener("click", onBack);
 }
 
 export function renderGame(app, settings, { onExit, onEnd }) {

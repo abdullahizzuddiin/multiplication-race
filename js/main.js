@@ -24,6 +24,7 @@ function showMathQuestSetup() {
   Kebun.quit();
   router.navigate((root) => renderMathQuestSetup(root, {
     onStart: startMathQuestGame,
+    onBack: showHome,
   }));
 }
 
