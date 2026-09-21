@@ -33,6 +33,12 @@ function makeClassic(source, path) {
       .replace("function renderPlay", "function renderKebunPlay")
       .replace("function renderResults", "function renderKebunResults");
   }
+  if (path.endsWith("features/mathquest/views.js")) {
+    output = output
+      .replace("function renderSetup", "function renderMathQuestSetup")
+      .replace("function renderGame", "function renderMathQuestGame")
+      .replace("function renderResults", "function renderMathQuestResults");
+  }
   if (path.endsWith("features/mathquest/config.js")) {
     output = output.replace(/^export const /gm, "const ");
   }
