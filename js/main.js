@@ -7,6 +7,7 @@ import Kebun from "./features/kebun/game.js";
 import { applyTheme, renderHome } from "./features/home/home.js";
 import { renderCountdown, renderPlay as renderBalapPlay, renderResults as renderBalapResults } from "./features/balap/views.js";
 import { renderMenu, renderPlay as renderKebunPlay, renderResults as renderKebunResults } from "./features/kebun/views.js";
+import { renderSetup as renderMathQuestSetup, renderGame as renderMathQuestGame, renderResults as renderMathQuestResults } from "./features/mathquest/views.js";
 
 const app = document.querySelector("#app");
 const router = createRouter(app);
@@ -15,7 +16,33 @@ let lastKebunMode = "A";
 function showHome() {
   Balap.quit();
   Kebun.quit();
-  router.navigate((root) => renderHome(root, { onStart: startBalap, onKebun: showKebunMenu }));
+  router.navigate((root) => renderHome(root, { onStart: startBalap, onKebun: showKebunMenu, onMathQuest: showMathQuestSetup }));
+}
+
+function showMathQuestSetup() {
+  Balap.quit();
+  Kebun.quit();
+  router.navigate((root) => renderMathQuestSetup(root, {
+    onStart: startMathQuestGame,
+    onBack: showHome,
+  }));
+}
+
+function startMathQuestGame(settings) {
+  router.navigate((root) => {
+    const cleanup = renderMathQuestGame(root, settings, {
+      onExit: showMathQuestSetup,
+      onEnd: showMathQuestResults,
+    });
+    return cleanup;
+  });
+}
+
+function showMathQuestResults(result) {
+  router.navigate((root) => renderMathQuestResults(root, result, {
+    onAgain: () => startMathQuestGame(result),
+    onSetup: showMathQuestSetup,
+  }));
 }
 
 function startBalap() {
