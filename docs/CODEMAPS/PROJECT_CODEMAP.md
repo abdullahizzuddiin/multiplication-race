@@ -1,10 +1,10 @@
-<!-- Generated: 2026-09-20 | Files scanned: 27 runtime/test files | Token estimate: ~770 -->
+<!-- Generated: 2026-09-21 | Files scanned: 32 runtime/test files | Token estimate: ~870 -->
 
 # Jagoan Kali — Project Codemap
 
 ## Purpose and stack
 
-Single-page multiplication game for children, with two activities: **Balap Kali** (race quiz) and **Kebun Kali** (visual/grouping quiz). Runtime is dependency-free vanilla HTML, CSS, and browser-native ES modules. There is no package manager, build step, backend, API, or database; browser `localStorage` is the persistent store.
+Single-page multiplication game for children, with three activities: **Balap Kali** (race quiz), **Kebun Kali** (visual/grouping quiz), and **MathQuest 10×10** (grid-arena multiplication quest). Runtime is dependency-free vanilla HTML, CSS, and browser-native ES modules. There is no package manager, build step, backend, API, or database; browser `localStorage` is the persistent store.
 
 `DESIGN.md` is the visual-system reference. `Rancangan-Game-Jagoan-Kali.md` is the product/design brief. `ui_examples/` contains reference-only prototypes and screenshots; none are imported at runtime.
 
@@ -29,6 +29,7 @@ index.html
 | Home | `showHome` | `features/home/home.js:renderHome` | — |
 | Balap countdown/play/results | `startBalap`, `showBalapPlay`, `showBalapResults` | `features/balap/views.js` | `features/balap/game.js` → `balap.js` |
 | Kebun menu/play/results | `showKebunMenu`, `startKebun`, `showKebunResults` | `features/kebun/views.js` | `features/kebun/game.js` → `kebun.js` |
+| MathQuest setup/game/results | `showMathQuestSetup`, `startMathQuestGame`, `showMathQuestResults` | `features/mathquest/views.js` | inline in `features/mathquest/engine.js` |
 
 `core/router.js:createRouter(app)` calls the previous screen cleanup before replacing `#app`. Balap and Kebun cleanup stop animation frames and pending timers. In particular, `balap.js:quit` cancels delayed question advancement so an exited game cannot update an unmounted view.
 
@@ -42,6 +43,10 @@ js/core/router.js             Minimal screen mount/unmount lifecycle
 js/features/home/home.js      Home markup, theme selection, dashboard values
 js/features/balap/views.js    Countdown, quiz, and result markup
 js/features/kebun/views.js    Mode-menu, quiz, and result markup
+js/features/mathquest/config.js MathQuest tuning constants, Prof. Diin tips/hints
+js/features/mathquest/state.js   MathQuest tiers, presets, question pool
+js/features/mathquest/engine.js  MathQuest quest state, scoring, timer, skip
+js/features/mathquest/views.js   MathQuest setup, game, and result markup
 js/balap.js                   Balap scoring, timer, HUD, question progression
 js/kebun.js                   Kebun modes A/B/C, timer, scoring, progression
 js/questions.js               Balap levels, adaptive question selection, insights
@@ -65,12 +70,13 @@ User input -> feature engine -> result callback -> main.js route change
 LocalStorage keys are compatibility contracts: `jagoanKali_progress`, `jagoanKali_streak`, and `jagoanKali_settings`. `Storage.getProgress()` normalizes older saves with missing Kebun fields. Keep these keys and the progress shape stable unless a migration is added.
 
 - Balap: `Questions.buildRound(level, facts)` favors unseen/weak facts; `Balap` records fact accuracy/timing, score, best score, level changes, and streak.
+- MathQuest: `createQuest(settings)` builds a shuffled no-repeat pool of (table, multiplier) pairs sized `activeTables × 10`; scoring is `100 + 10 × streak`; skips deduct 10 seconds and advance to the next question. Setup state is updated via targeted DOM updates (`updateSetupDOM`) rather than a full innerHTML re-render.
 - Kebun: `KebunQuestions.buildSession(level, mode)` creates five questions; `Kebun` records points, unlocks modes B/C, and advances garden level after strong sessions.
 - Theme: Home updates `settings.theme`; every mounted Home or Balap view reads the saved theme.
 
 ## Styling
 
-`css/base.css` imports the established visual rules in `css/styles.css` to preserve appearance during the module migration. `css/components.css`, `css/home.css`, `css/balap.css`, and `css/kebun.css` are feature stylesheet entry points reserved for incremental rule extraction. Reuse existing custom properties and tactile component classes (`.btn`, `.choice`, `.timer-bar`, `.screen`) rather than adding inline styles.
+`css/base.css` imports the established visual rules in `css/styles.css` to preserve appearance during the module migration. `css/components.css`, `css/home.css`, `css/balap.css`, `css/kebun.css`, and `css/mathquest.css` are feature stylesheet entry points reserved for incremental rule extraction. Reuse existing custom properties and tactile component classes (`.btn`, `.choice`, `.timer-bar`, `.screen`) rather than adding inline styles.
 
 ## Tests and change checklist
 
