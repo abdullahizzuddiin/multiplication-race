@@ -12,7 +12,7 @@ export function renderSetup(app, { onStart, onBack }) {
 
   function reRender() {
     app.innerHTML = buildSetupHTML(state);
-    wireSetupEvents(app, state, (newState) => { state = newState; reRender(); }, onStart, onBack);
+    wireSetupEvents(app, state, (newState) => { Object.assign(state, newState); updateSetupDOM(app, state); }, onStart, onBack);
   }
 
   reRender();
@@ -118,6 +118,70 @@ function buildSetupHTML(state) {
       <p class="mq-footer-tagline">No score penalties for retries! Learn through play.</p>
     </section>
   `;
+}
+
+function updateSetupDOM(app, state) {
+  const tierId = findTierByTables(state.tables);
+  const tier = TIERS.find(t => t.id === tierId);
+  const maxQuestions = state.tables.size * QUESTIONS_PER_TABLE;
+
+  app.querySelectorAll("[data-preset-id]").forEach(btn => {
+    btn.classList.toggle("active", state.activePresetId === btn.dataset.presetId);
+  });
+
+  app.querySelectorAll("[data-tier-id]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.tierId === tierId);
+  });
+
+  app.querySelectorAll("[data-table]").forEach(btn => {
+    btn.classList.toggle("active", state.tables.has(Number(btn.dataset.table)));
+  });
+
+  const tierPill = app.querySelector(".mq-section-tables .mq-pill");
+  if (tierPill) tierPill.textContent = tier ? tier.nickname : "Custom";
+
+  const chipsLabel = app.querySelector(".mq-chips-label");
+  if (chipsLabel) chipsLabel.textContent = `${state.tables.size} Tables Active`;
+
+  app.querySelectorAll("[data-timer]").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.timer) === state.timerSeconds);
+  });
+
+  const timerPill = app.querySelector(".mq-section-timer .mq-pill");
+  if (timerPill) timerPill.textContent = getPaceLabel(state.timerSeconds);
+
+  const slider = app.querySelector("#mq-timer-slider");
+  if (slider) slider.value = String(state.timerSeconds);
+
+  const sliderLabel = app.querySelector(".mq-slider-label");
+  if (sliderLabel) sliderLabel.textContent = formatTime(state.timerSeconds);
+
+  app.querySelectorAll("[data-questions]").forEach(btn => {
+    btn.classList.toggle("active", Number(btn.dataset.questions) === state.questions);
+  });
+
+  const questionsPill = app.querySelector(".mq-section-questions .mq-pill");
+  if (questionsPill) questionsPill.textContent = getQuestLengthLabel(state.questions);
+
+  const stepDown = app.querySelector("#mq-step-down");
+  if (stepDown) stepDown.disabled = state.questions <= 1;
+
+  const stepUp = app.querySelector("#mq-step-up");
+  if (stepUp) stepUp.disabled = state.questions >= maxQuestions;
+
+  const stepValue = app.querySelector(".mq-step-value");
+  if (stepValue) stepValue.textContent = String(state.questions);
+
+  const maxLabel = app.querySelector(".mq-max-label");
+  if (maxLabel) maxLabel.textContent = `Max: ${maxQuestions}`;
+
+  const summaryTables = app.querySelectorAll(".mq-summary-value");
+  if (summaryTables.length >= 3) {
+    const activeTables = [...state.tables].sort((a, b) => a - b);
+    summaryTables[0].textContent = `${state.tables.size} Tables (${activeTables.join(", ")})`;
+    summaryTables[1].textContent = `${state.timerSeconds} Seconds`;
+    summaryTables[2].textContent = `${state.questions} Questions`;
+  }
 }
 
 function wireSetupEvents(app, state, setState, onStart, onBack) {
